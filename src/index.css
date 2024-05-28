@@ -1,13 +1,17 @@
 @tailwind base;
+
 h1 {
   @apply text-2xl;
 }
+
 h2 {
   @apply text-xl;
 }
+
 h3 {
   @apply text-lg;
 }
+
 a {
   @apply text-blue-600 underline;
 }
@@ -15,17 +19,17 @@ a {
 @tailwind components;
 @tailwind utilities;
 
-html, 
-body {
-  height: 100vh;
-  min-width: 1000px;
-}
-
-:root {
-  color-scheme: dark;
+#root {
+  font-family: "Roboto", sans-serif;
 
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
 
+
+html {
+  min-width: max-content;
+  max-width: max-content;
+  min-height: 100vh;
 }

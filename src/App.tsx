@@ -4,19 +4,23 @@ import Login from './pages/Login'
 import { auth } from './utils/firebase'
 import axios from 'axios'
 import LoadingSpiner from './components/LoadingSpinner'
-import { Grid, NavLink } from '@mantine/core'
-import { RiFileTextLine, RiFolderUserLine } from "react-icons/ri";
+import { Badge, Button, NavLink, Tooltip } from '@mantine/core'
+import { RiFileTextLine, RiFolderUserLine, RiLogoutBoxLine } from "react-icons/ri";
+import Invoices from './pages/Invoices'
+import Customers from './pages/Customers'
+import { countAtom, isLoadingAtom } from './utils/atoms'
+import { useAtom } from 'jotai'
 
-type ContextType = {
-  setLoading: (l: boolean) => void
-}
-
-export const AppContext = createContext({} as ContextType)
 const App = () => {
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useAtom(isLoadingAtom)
   const [isLogin, setIsLogin] = useState<boolean>(false)
+  const [activePage, setActivePage] = useState(0);
+
+  // jotai
+  const [count] = useAtom(countAtom)
 
   useEffect(() => {
+    // firebase login detection
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         console.log("User is logged in")
@@ -41,48 +45,102 @@ const App = () => {
     )
   }, [])
 
-
+  // signout firebase
   const logout = async () => {
     if (auth.currentUser?.email) {
       auth.signOut().then(() => {
         alert("Logged Out")
+        setIsLogin(false)
       })
     }
   }
 
+  // side navigation data
+  const navData = [
+    {
+      icon: RiFileTextLine,
+      label: 'Invoices',
+      description: 'Overview of All Invoices',
+      href: '/invoices'
+    },
+    {
+      icon: RiFolderUserLine,
+      label: 'Customers Infos',
+      description: 'Overview of All Cutomer Information',
+      href: '/customers'
+    },
+  ]
+
+  const renderSideNav = () => (
+    <div className='min-w-[320px]'>
+      <h2 className='p-8'>258 CRM Console</h2>
+      {/* render navlink datas */}
+      {
+        navData.map((item, index) => (
+          <NavLink
+            className='text-2xl pl-8'
+            key={item.label}
+            active={index === activePage}
+            label={item.label}
+            // description={item.description}
+            leftSection={<item.icon />}
+            onClick={() => setActivePage(index)}
+            color="green"
+          />
+        ))
+      }
+
+      <div className='p-8 absolute bottom-0'>
+        <div className='flex'>
+          <Tooltip label="Logout">
+            <Button className='mt-2 mr-8' color='#666' onClick={logout}>
+              <RiLogoutBoxLine />
+            </Button>
+          </Tooltip>
+          <div>
+            <Badge color='teal'>
+              Server Status: Online
+            </Badge>
+            <br />
+            <Badge
+              variant="gradient"
+              gradient={{ from: 'cyan', to: 'violet', deg: 253 }}
+            >
+              User: {auth.currentUser?.email}
+            </Badge>
+            {count}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderContent = () => {
+    switch (activePage) {
+      case 0:
+        return <Invoices />
+      case 1:
+        return <Customers />
+      default:
+        <>404 Not Found</>
+    }
+  }
+
   const renderApp = () => (
-    <div>
-      <Grid columns={24}>
-        <Grid.Col span={4} className='bg-[#333] h-[100vh] p-0'>
-          <h2 className='p-8'>258 CRM Console</h2>
-          <NavLink
-            className='text-2xl pl-8'
-            href="#required-for-focus"
-            label="Invoices"
-            leftSection={<RiFileTextLine />}
-            variant="filled"
-            active={false}
-          />
-          <NavLink
-            className='text-2xl pl-8'
-            href="#required-for-focus"
-            label="Customers Info"
-            leftSection={<RiFolderUserLine />}
-          />
-        </Grid.Col>
-        <Grid.Col span={20}>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Modi, consequatur provident rerum nobis voluptatum praesentium ad perferendis dolores unde vitae nemo sequi aperiam repellat obcaecati ipsa illum laborum. Cupiditate, molestiae!
-        </Grid.Col>
-      </Grid>
+    <div className='flex h-screen w-screen'>
+      <div className='bg-[#333] p-0'>
+        {renderSideNav()}
+      </div>
+      <div className='p-10'>
+        {renderContent()}
+      </div>
     </div>
   )
 
   return (
-    <div className='appContainer'>
-      <AppContext.Provider value={{ setLoading: setIsLoading }}>
-        <LoadingSpiner show={isLoading} />
-        {isLogin ? renderApp() : <Login />}
-      </AppContext.Provider>
+    <div>
+      <LoadingSpiner show={isLoading} />
+      {isLogin ? renderApp() : <Login />}
     </div>
   )
 }
