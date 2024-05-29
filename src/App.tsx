@@ -8,16 +8,13 @@ import { Badge, Button, NavLink, Tooltip } from '@mantine/core'
 import { RiFileTextLine, RiFolderUserLine, RiLogoutBoxLine } from "react-icons/ri";
 import Invoices from './pages/Invoices'
 import Customers from './pages/Customers'
-import { countAtom, isLoadingAtom } from './utils/atoms'
+import { isLoadingAtom } from './utils/atoms'
 import { useAtom } from 'jotai'
 
 const App = () => {
   const [isLoading, setIsLoading] = useAtom(isLoadingAtom)
   const [isLogin, setIsLogin] = useState<boolean>(false)
   const [activePage, setActivePage] = useState(0);
-
-  // jotai
-  const [count] = useAtom(countAtom)
 
   useEffect(() => {
     // firebase login detection
@@ -108,7 +105,6 @@ const App = () => {
             >
               User: {auth.currentUser?.email}
             </Badge>
-            {count}
           </div>
         </div>
       </div>
@@ -131,7 +127,7 @@ const App = () => {
       <div className='bg-[#333] p-0'>
         {renderSideNav()}
       </div>
-      <div className='p-10'>
+      <div className='p-10 overflow-scroll w-full overflow-x-hidden'>
         {renderContent()}
       </div>
     </div>

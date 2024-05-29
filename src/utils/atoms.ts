@@ -1,9 +1,9 @@
 import { atom } from 'jotai'
+import { Invoice } from './Type'
+import { getRandomInvoiceArr } from './mockData'
 
-export const countAtom = atom<number>(0)
 export const citiesAtom = atom<string[]>(['New York', 'Toronto', 'Detroit'])
-// export const mangaAtom = atom({ 'Dragon Ball': 1984, 'One Piece': 1997, Naruto: 1999 })
 
 export const isLoadingAtom = atom<boolean>(false)
-
-export const invoiceArr = atom<string[]>(['I1', 'I2'])
+// contains paged invoices data
+export const invoiceArr = atom<Invoice[]>(getRandomInvoiceArr(100))
