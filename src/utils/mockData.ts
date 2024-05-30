@@ -37,6 +37,7 @@ export const generateInvoiceItem = (): InvoiceItem[] => {
   return items
 }
 
+// generate an invoice array with x amount of items on each invoice
 export const getRandomInvoiceArr = (amt: number): Invoice[] => {
   const invoiceArr: Invoice[] = []
   for (let i = 0; i < amt; i++) {

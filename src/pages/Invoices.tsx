@@ -1,5 +1,5 @@
-import { ActionIcon, Badge, Button, Card, Grid, Menu, Table } from '@mantine/core'
-import { invoiceArr, isLoadingAtom } from '../utils/atoms'
+import { ActionIcon, Badge, Card, Grid, Menu, MultiSelect, Select, Switch, Table } from '@mantine/core'
+import { invoiceArrAtom, invoiceFilterAtom, isLoadingAtom } from '../utils/atoms'
 import { useAtom } from 'jotai'
 import { InvoiceStatus } from '../utils/Type.ts'
 import {
@@ -12,6 +12,7 @@ import {
   RiUserFill
 } from 'react-icons/ri'
 import { AreaChart, BarChart } from '@mantine/charts'
+import { DateInput } from '@mantine/dates';
 
 const data = [
   { month: 'January', Smartphones: 1200, Laptops: 900, Tablets: 200 },
@@ -20,7 +21,7 @@ const data = [
   { month: 'April', Smartphones: 1000, Laptops: 200, Tablets: 800 },
   { month: 'May', Smartphones: 800, Laptops: 1400, Tablets: 1200 },
   { month: 'June', Smartphones: 750, Laptops: 600, Tablets: 1000 },
-];
+]
 
 export const data2 = [
   {
@@ -53,11 +54,12 @@ export const data2 = [
     Oranges: 1726,
     Tomatoes: 2290,
   },
-];
+]
 
 const Invoices = () => {
   const [_, setIsLoading] = useAtom(isLoadingAtom)
-  const [invoices, setInvoices] = useAtom(invoiceArr)
+  const [invoices, setInvoices] = useAtom(invoiceArrAtom)
+  const [invoiceFilter, setInvoiceFilter] = useAtom(invoiceFilterAtom)
 
   const getPaymentIcon = (method: string) => {
     if (method === 'card') {
@@ -190,6 +192,86 @@ const Invoices = () => {
     </Table>
   )
 
+  const renderPaymentMethodSelect = () => (
+    <MultiSelect
+      className='mb-3'
+      label="Payment Method"
+      checkIconPosition="right"
+      placeholder="Pick Payment Method"
+      data={[
+        { value: 'card', label: 'Card' },
+        { value: 'cash', label: 'Cash' },
+        { value: 'etransfer', label: 'E-transfer' },
+        { value: 'storeCredit', label: 'Store Credit' },
+      ]}
+      value={invoiceFilter.paymentMethod}
+      onChange={(value: string[]) => setInvoiceFilter({ ...invoiceFilter, paymentMethod: value })}
+    />
+  )
+
+  const renderStatusSelect = () => (
+    <MultiSelect
+      className='mb-3'
+      label="Invoice Status"
+      checkIconPosition="right"
+      placeholder="Pick Payment Method"
+      data={[
+        { value: '0', label: 'Issued' },
+        { value: '1', label: 'Paid' },
+        { value: '2', label: 'Pickedup' },
+        { value: '3', label: 'Expired' },
+      ]}
+      value={invoiceFilter.status}
+      onChange={(value: string[]) => setInvoiceFilter({ ...invoiceFilter, status: value })}
+    />
+  )
+
+  const renderShippingSelect = () => (
+    <Select
+      className='mb-3'
+      label="Shipping / Pickup"
+      checkIconPosition="right"
+      defaultValue='all'
+      data={[
+        { value: 'all', label: 'All' },
+        { value: 'pickup', label: 'Show Only Pickup' },
+        { value: 'shipping', label: 'Show Only Shipping' }
+      ]}
+      value={invoiceFilter.shipping}
+      onChange={(value: string | null) => setInvoiceFilter({ ...invoiceFilter, shipping: value })}
+    />
+  )
+
+  const renderDateSelect = () => {
+    <DateInput
+      value={invoiceFilter.startTime}
+      onChange={(val) => setInvoiceFilter({ ...invoiceFilter, startTime: val })}
+      label="Date input"
+      placeholder="Date input"
+    />
+  }
+
+  const renderFilterSection = () => (
+    <Grid className='m-6'>
+      <Grid.Col span={4}>
+        <Card className='bg-[#222]'>
+          {renderPaymentMethodSelect()}
+          {renderStatusSelect()}
+          {renderShippingSelect()}
+        </Card>
+      </Grid.Col>
+      <Grid.Col span={4}>
+        <Card className='bg-[#222]'>
+        </Card>
+      </Grid.Col>
+      <Grid.Col span={4}>
+        <Card className='bg-[#222]'>
+          Lorem ipsum, dolor sit amet consectetur adipisicing elit. A suscipit beatae asperiores, molestias minima ducimus tenetur incidunt voluptatum quae voluptas odio cupiditate illo. Nulla nihil officiis libero laudantium a? Aliquam?
+        </Card>
+      </Grid.Col>
+    </Grid>
+  )
+
   return (
     <div>
       <h1>Invoices View</h1>
@@ -227,23 +309,7 @@ const Invoices = () => {
         </Grid.Col>
       </Grid>
       <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Grid className='m-6'>
-          <Grid.Col span={4}>
-            <Card className='bg-[#222]'>
-              Lorem ipsum, dolor sit amet consectetur adipisicing elit. A suscipit beatae asperiores, molestias minima ducimus tenetur incidunt voluptatum quae voluptas odio cupiditate illo. Nulla nihil officiis libero laudantium a? Aliquam?
-            </Card>
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <Card className='bg-[#222]'>
-              Lorem ipsum, dolor sit amet consectetur adipisicing elit. A suscipit beatae asperiores, molestias minima ducimus tenetur incidunt voluptatum quae voluptas odio cupiditate illo. Nulla nihil officiis libero laudantium a? Aliquam?
-            </Card>
-          </Grid.Col>
-          <Grid.Col span={4}>
-            <Card className='bg-[#222]'>
-              Lorem ipsum, dolor sit amet consectetur adipisicing elit. A suscipit beatae asperiores, molestias minima ducimus tenetur incidunt voluptatum quae voluptas odio cupiditate illo. Nulla nihil officiis libero laudantium a? Aliquam?
-            </Card>
-          </Grid.Col>
-        </Grid>
+        {renderFilterSection()}
         {renderInvoicesTable()}
       </Card>
     </div>

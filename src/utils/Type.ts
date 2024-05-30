@@ -33,12 +33,20 @@ export type InvoiceItem = {
     handlingFee: number,
 }
 
-export type PaymentMethod = 'card' | 'cash' | 'etransfer'
+export type PaymentMethod = 'card' | 'cash' | 'etransfer' | 'storeCredit'
 
 export type Buyer = {
     name: string,
     email?: string,
     phone?: string,
     address?: string
+}
+
+export type InvoiceFilter = {
+    paymentMethod: string[],
+    status: string[],
+    shipping: string,
+    startTime: string,
+    endTime: string
 
 }
