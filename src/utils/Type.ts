@@ -10,16 +10,13 @@ export type Invoice = {
     status: InvoiceStatus,
     isShipping: boolean,
     isRedflag: boolean,
-    time: string,
+    timeCreated: string,
+    timePickedup: string,
     items: InvoiceItem[],
 }
 
-export enum InvoiceStatus {
-    Issued,
-    Paid,
-    Pickedup,
-    Expired,
-}
+export type InvoiceStatus = 'issued' | 'paid' | 'pickedup' | 'shipped' | 'expired' | 'returned'
+export type PaymentMethod = 'card' | 'cash' | 'etransfer' | 'storeCredit' | ''
 
 export type InvoiceItem = {
     msrp: number,
@@ -33,20 +30,18 @@ export type InvoiceItem = {
     handlingFee: number,
 }
 
-export type PaymentMethod = 'card' | 'cash' | 'etransfer' | 'storeCredit'
-
 export type Buyer = {
     name: string,
     email?: string,
     phone?: string,
-    address?: string
+    address?: string,
 }
 
 export type InvoiceFilter = {
     paymentMethod: string[],
     status: string[],
     shipping: string,
-    startTime: string,
-    endTime: string
-
+    dateRange: [Date | null, Date | null],
+    invoiceTotalRange: { min: number, max: number }
+    keyword: string,
 }
