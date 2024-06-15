@@ -9,17 +9,14 @@ import {
   NumberInput,
   Select,
   Table,
-  Textarea
+  Textarea,
+  Title
 } from '@mantine/core'
 import { initInvoiceFilter, invoiceArrAtom, invoiceFilterAtom, isLoadingAtom } from '../utils/atoms'
 import { useAtom } from 'jotai'
 import {
-  RiBankCardFill,
-  RiCashFill,
-  RiCoinsFill,
   RiDeleteBin2Fill,
   RiMailFill,
-  RiMailLockFill,
   RiMailSendLine,
   RiMenuFill,
   RiPenNibFill,
@@ -31,6 +28,7 @@ import { useEffect, useState } from 'react'
 import Pagination from '../components/Pagination.tsx'
 import { getPaymentIcon, getStatusColor, server } from '../utils/utils.tsx'
 import axios, { AxiosError, AxiosResponse } from 'axios'
+import { InvoiceFilter } from '../utils/Type.ts'
 
 const data = [
   { month: 'January', Cash: 1200, Card: 900, Etransfer: 200 },
@@ -76,29 +74,33 @@ const Invoices = () => {
 
   // pagination
   const [currPage, setCurrPage] = useState<number>(0)
-  const [itemsPerPage, setItemsPerPage] = useState<number>(20)
+  const [itemsPerPage, setItemsPerPage] = useState<string | null>('20')
   const [totalCount, setTotalCount] = useState<number>(0)
 
   useEffect(() => {
-
+    getInvoiceByPage(true)
   }, [])
 
-  const getInvoiceByPage = async (isInit: boolean) => {
+  const getInvoiceByPage = async (isInit: boolean, newPage?: number, filter?: InvoiceFilter) => {
+    setIsLoading(true)
     await axios({
       method: 'post',
       url: `${server}/getInvoicesByPage`,
       data: {
-        currPage: isInit ? 0 : currPage,
-        itemsPerPage: itemsPerPage,
-        filter: invoiceFilter,
+        currPage: isInit ? 0 : newPage ?? currPage,
+        itemsPerPage: Number(itemsPerPage),
+        filter: filter ?? invoiceFilter,
       }
     }).then((res: AxiosResponse) => {
       if (res.status === 200) {
-        console.log(res.data)
+        setInvoices(res.data['itemsArr'])
+        setTotalCount(res.data['totalItems'])
       }
     }).catch((err: AxiosError) => {
       alert(err.message)
+      setIsLoading(false)
     })
+    setIsLoading(false)
   }
 
   const renderInvoicesTable = () => (
@@ -117,7 +119,7 @@ const Invoices = () => {
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        {invoices.map((val, index) => (
+        {invoices.length > 0 ? invoices.map((val, index) => (
           <Table.Tr key={index}>
             <Table.Td>{val.invoiceNumber}</Table.Td>
             <Table.Td>
@@ -170,7 +172,7 @@ const Invoices = () => {
               </Menu>
             </Table.Td>
           </Table.Tr>
-        ))}
+        )) : <></>}
       </Table.Tbody>
     </Table>
   )
@@ -290,7 +292,10 @@ const Invoices = () => {
           <Button
             variant="gradient"
             gradient={{ from: 'purple', to: 'cyan', deg: 0 }}
-            onClick={() => setInvoiceFilter(initInvoiceFilter)}
+            onClick={() => {
+              setInvoiceFilter(initInvoiceFilter)
+              getInvoiceByPage(true, 0, initInvoiceFilter)
+            }}
           >
             Reset Filter
           </Button>
@@ -319,20 +324,36 @@ const Invoices = () => {
     </Grid>
   )
 
+  // pagination methods
+  const getTotalPage = () => Math.ceil(totalCount / Number(itemsPerPage)) === 0 ? 1 : Math.ceil(totalCount / Number(itemsPerPage))
   const nextPage = () => {
-
+    if ((currPage + 1) >= getTotalPage()) return
+    setCurrPage(val => val + 1)
+    getInvoiceByPage(false, currPage + 1)
   }
-
   const prevPage = () => {
-
+    if (currPage < 1) return
+    setCurrPage(val => val - 1)
+    getInvoiceByPage(false, currPage - 1)
+  }
+  const lastPage = () => {
+    if (currPage + 1 >= getTotalPage()) return
+    setCurrPage(getTotalPage() - 1)
+    getInvoiceByPage(false, getTotalPage() - 1)
+  }
+  const firstPage = () => {
+    if (currPage - 1 < 0) return
+    setCurrPage(0)
+    getInvoiceByPage(true)
   }
 
   return (
     <div>
-      <h1>Invoices Manager</h1>
+      {/* <h1>Invoices Manager</h1> */}
       <Grid className='m-6 gap-2'>
         <Grid.Col span={6}>
-          <Card>
+          <Card className='p-8'>
+            <Title order={2}>Monthly Total</Title>
             <BarChart
               h={300}
               data={data}
@@ -350,7 +371,8 @@ const Invoices = () => {
           </Card>
         </Grid.Col>
         <Grid.Col span={6}>
-          <Card>
+          <Card className='p-8'>
+            <Title order={2}>Revenue VS Returns</Title>
             <AreaChart
               h={300}
               data={data2}
@@ -371,9 +393,18 @@ const Invoices = () => {
         <Pagination
           totalCount={totalCount}
           itemsPerPage={itemsPerPage}
+          setItemsPerPage={(val: string | null) => {
+            setItemsPerPage(val)
+            setCurrPage(0)
+            getInvoiceByPage(true)
+          }}
+          isBottom={false}
           currPage={currPage}
           nextPage={nextPage}
           prevPage={prevPage}
+          lastPage={lastPage}
+          firstPage={firstPage}
+          getTotalPage={getTotalPage}
         />
         <hr className='border-[#555] mt-6' />
         {renderInvoicesTable()}
@@ -388,9 +419,18 @@ const Invoices = () => {
         <Pagination
           totalCount={totalCount}
           itemsPerPage={itemsPerPage}
+          setItemsPerPage={(val: string | null) => {
+            setItemsPerPage(val)
+            setCurrPage(0)
+            getInvoiceByPage(true)
+          }}
+          isBottom={true}
           currPage={currPage}
           nextPage={nextPage}
           prevPage={prevPage}
+          lastPage={lastPage}
+          firstPage={firstPage}
+          getTotalPage={getTotalPage}
         />
       </Card>
     </div>

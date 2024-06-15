@@ -14,7 +14,7 @@ export const initInvoiceFilter: InvoiceFilter = {
     status: [],
     shipping: '',
     dateRange: [null, null],
-    invoiceTotalRange: { min: 0, max: 0 },
+    invoiceTotalRange: { min: 0, max: 999999 },
     keyword: ''
 }
 export const invoiceFilterAtom = atom<InvoiceFilter>(initInvoiceFilter)

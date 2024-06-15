@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import Login from './pages/Login'
 import { auth } from './utils/firebase'
@@ -71,7 +71,6 @@ const App = () => {
   const renderSideNav = () => (
     <div className='min-w-[320px]'>
       <h2 className='p-8'>258 CRM Console</h2>
-      {/* render navlink datas */}
       {
         navData.map((item, index) => (
           <NavLink
@@ -79,7 +78,6 @@ const App = () => {
             key={item.label}
             active={index === activePage}
             label={item.label}
-            // description={item.description}
             leftSection={<item.icon />}
             onClick={() => setActivePage(index)}
             color="green"
@@ -103,7 +101,7 @@ const App = () => {
               variant="gradient"
               gradient={{ from: 'cyan', to: 'violet', deg: 253 }}
             >
-              User: {auth.currentUser?.email}
+              {auth.currentUser?.email}
             </Badge>
           </div>
         </div>
@@ -127,7 +125,7 @@ const App = () => {
       <div className='bg-[#333] p-0'>
         {renderSideNav()}
       </div>
-      <div className='p-10 overflow-scroll w-full overflow-x-hidden'>
+      <div className="p-10 overflow-scroll w-full overflow-x-hidden bg-[url('src/assets/bg1.jpg')] bg-cover bg-blend-multiply	bg-gray-300">
         {renderContent()}
       </div>
     </div>
