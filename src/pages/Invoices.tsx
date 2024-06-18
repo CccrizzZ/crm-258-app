@@ -12,9 +12,17 @@ import {
   Textarea,
   Title
 } from '@mantine/core'
-import { initInvoiceFilter, invoiceArrAtom, invoiceFilterAtom, isLoadingAtom } from '../utils/atoms'
+import {
+  initInvoiceFilter,
+  invoiceArrAtom,
+  invoiceFilterAtom,
+  isLoadingAtom,
+  selectedEditInvoice
+} from '../utils/atoms'
 import { useAtom } from 'jotai'
 import {
+  RiArrowDownFill,
+  RiArrowUpFill,
   RiDeleteBin2Fill,
   RiMailFill,
   RiMailSendLine,
@@ -28,7 +36,9 @@ import { useEffect, useState } from 'react'
 import Pagination from '../components/Pagination.tsx'
 import { getPaymentIcon, getStatusColor, server } from '../utils/utils.tsx'
 import axios, { AxiosError, AxiosResponse } from 'axios'
-import { InvoiceFilter } from '../utils/Type.ts'
+import { Invoice, InvoiceFilter } from '../utils/Type.ts'
+import { format } from 'date-fns'
+import EditInvoiceModal from '../components/EditInvoiceModal.tsx'
 
 const data = [
   { month: 'January', Cash: 1200, Card: 900, Etransfer: 200 },
@@ -77,11 +87,19 @@ const Invoices = () => {
   const [itemsPerPage, setItemsPerPage] = useState<string | null>('20')
   const [totalCount, setTotalCount] = useState<number>(0)
 
+  // sorting
+  const [timeOrder, setTimeOrder] = useState<number>(-1)
+
+  // invoice actions
+  const [showEditInvoiceModal, setShowEditInvoiceModal] = useState<boolean>(false)
+  const [__, setSelectedInvoice] = useAtom(selectedEditInvoice)
+
+
   useEffect(() => {
     getInvoiceByPage(true)
   }, [])
 
-  const getInvoiceByPage = async (isInit: boolean, newPage?: number, filter?: InvoiceFilter) => {
+  const getInvoiceByPage = async (isInit: boolean, newPage?: number, filter?: InvoiceFilter, order?: number) => {
     setIsLoading(true)
     await axios({
       method: 'post',
@@ -90,6 +108,7 @@ const Invoices = () => {
         currPage: isInit ? 0 : newPage ?? currPage,
         itemsPerPage: Number(itemsPerPage),
         filter: filter ?? invoiceFilter,
+        timeOrder: order ?? timeOrder
       }
     }).then((res: AxiosResponse) => {
       if (res.status === 200) {
@@ -103,6 +122,16 @@ const Invoices = () => {
     setIsLoading(false)
   }
 
+  const flipTimeSort = () => {
+    setTimeOrder(-timeOrder)
+    getInvoiceByPage(true, undefined, undefined, -timeOrder)
+  }
+
+  const showEditPopup = (val: Invoice) => {
+    setSelectedInvoice(val)
+    setShowEditInvoiceModal(true)
+  }
+
   const renderInvoicesTable = () => (
     <Table className='mt-8' verticalSpacing="md">
       <Table.Thead>
@@ -114,7 +143,12 @@ const Invoices = () => {
           <Table.Th>Invoice Total</Table.Th>
           <Table.Th>Shipping</Table.Th>
           <Table.Th>Status</Table.Th>
-          <Table.Th>Time Created</Table.Th>
+          <Table.Th className='flex justify-center'>
+            Time Created
+            <div onClick={flipTimeSort}>
+              {timeOrder === 1 ? <RiArrowUpFill className='mx-2' /> : <RiArrowDownFill className='mx-2' />}
+            </div>
+          </Table.Th>
           <Table.Th>Action</Table.Th>
         </Table.Tr>
       </Table.Thead>
@@ -147,7 +181,7 @@ const Invoices = () => {
                 </Badge>
               }
             </Table.Td>
-            <Table.Td>{val.timeCreated}</Table.Td>
+            <Table.Td className='flex justify-center'>{format(new Date(val.time), "P h:mm")}</Table.Td>
             <Table.Td>
               <Menu shadow="md" width={200}>
                 <Menu.Target>
@@ -157,7 +191,7 @@ const Invoices = () => {
                 </Menu.Target>
                 <Menu.Dropdown>
                   <Menu.Label>Action</Menu.Label>
-                  <Menu.Item leftSection={<RiPenNibFill />}>
+                  <Menu.Item leftSection={<RiPenNibFill />} onClick={() => showEditPopup(val)}>
                     Edit
                   </Menu.Item>
                   <Menu.Item leftSection={<RiMailFill />}>
@@ -347,47 +381,56 @@ const Invoices = () => {
     getInvoiceByPage(true)
   }
 
+
+  const renderCharts = () => (
+    <Grid className='m-6 gap-2'>
+      <Grid.Col span={6}>
+        <Card className='p-8'>
+          <Title order={2}>Monthly Total</Title>
+          <BarChart
+            h={300}
+            data={data}
+            type="stacked"
+            dataKey="month"
+            strokeDasharray="15 15"
+            tooltipAnimationDuration={200}
+            withLegend
+            series={[
+              { name: 'Cash', color: 'teal.6' },
+              { name: 'Card', color: 'blue.6' },
+              { name: 'Etransfer', color: 'violet.6' },
+            ]}
+          />
+        </Card>
+      </Grid.Col>
+      <Grid.Col span={6}>
+        <Card className='p-8'>
+          <Title order={2}>Revenue VS Returns</Title>
+          <AreaChart
+            h={300}
+            data={data2}
+            dataKey="date"
+            type="stacked"
+            tooltipAnimationDuration={200}
+            withLegend
+            series={[
+              { name: 'Returns', color: 'red.6' },
+              { name: 'Revenue', color: 'teal.6' },
+            ]}
+          />
+        </Card>
+      </Grid.Col>
+    </Grid>
+  )
+
   return (
     <div>
+      <EditInvoiceModal
+        open={showEditInvoiceModal}
+        close={() => setShowEditInvoiceModal(false)}
+      />
       {/* <h1>Invoices Manager</h1> */}
-      <Grid className='m-6 gap-2'>
-        <Grid.Col span={6}>
-          <Card className='p-8'>
-            <Title order={2}>Monthly Total</Title>
-            <BarChart
-              h={300}
-              data={data}
-              type="stacked"
-              dataKey="month"
-              strokeDasharray="15 15"
-              tooltipAnimationDuration={200}
-              withLegend
-              series={[
-                { name: 'Cash', color: 'teal.6' },
-                { name: 'Card', color: 'blue.6' },
-                { name: 'Etransfer', color: 'violet.6' },
-              ]}
-            />
-          </Card>
-        </Grid.Col>
-        <Grid.Col span={6}>
-          <Card className='p-8'>
-            <Title order={2}>Revenue VS Returns</Title>
-            <AreaChart
-              h={300}
-              data={data2}
-              dataKey="date"
-              type="stacked"
-              tooltipAnimationDuration={200}
-              withLegend
-              series={[
-                { name: 'Returns', color: 'red.6' },
-                { name: 'Revenue', color: 'teal.6' },
-              ]}
-            />
-          </Card>
-        </Grid.Col>
-      </Grid>
+      {renderCharts()}
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         {renderFilterSection()}
         <Pagination

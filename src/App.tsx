@@ -12,7 +12,7 @@ import { isLoadingAtom } from './utils/atoms'
 import { useAtom } from 'jotai'
 
 const App = () => {
-  const [isLoading, setIsLoading] = useAtom(isLoadingAtom)
+  const [isLoading] = useAtom(isLoadingAtom)
   const [isLogin, setIsLogin] = useState<boolean>(false)
   const [activePage, setActivePage] = useState(0);
 
@@ -125,7 +125,7 @@ const App = () => {
       <div className='bg-[#333] p-0'>
         {renderSideNav()}
       </div>
-      <div className="p-10 overflow-scroll w-full overflow-x-hidden bg-[url('src/assets/bg1.jpg')] bg-cover bg-blend-multiply	bg-gray-300">
+      <div className="p-10 overflow-scroll w-full overflow-x-hidden bg-[url('src/assets/bg2.jpg')] bg-cover bg-blend-multiply	bg-gray-300">
         {renderContent()}
       </div>
     </div>

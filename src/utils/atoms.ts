@@ -1,5 +1,5 @@
 import { atom } from 'jotai'
-import { Invoice, InvoiceFilter } from './Type'
+import { Invoice, InvoiceFilter, InvoiceStatus, PaymentMethod } from './Type'
 
 export const citiesAtom = atom<string[]>(['New York', 'Toronto', 'Detroit'])
 
@@ -18,3 +18,21 @@ export const initInvoiceFilter: InvoiceFilter = {
     keyword: ''
 }
 export const invoiceFilterAtom = atom<InvoiceFilter>(initInvoiceFilter)
+
+export const initInvoice = {
+    invoiceNumber: 0,
+    buyerName: '',
+    buyerEmail: '',
+    paymentMethod: '' as PaymentMethod,
+    auctionLot: 0,
+    invoiceTotal: 0,
+    buyersPremium: 0,
+    totalHandlingFee: 0,
+    status: '' as InvoiceStatus,
+    isShipping: false,
+    isRedflag: false,
+    time: '',
+    timePickedup: '',
+    items: [],
+}
+export const selectedEditInvoice = atom<Invoice>(initInvoice)

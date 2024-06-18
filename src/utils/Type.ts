@@ -10,12 +10,12 @@ export type Invoice = {
     status: InvoiceStatus,
     isShipping: boolean,
     isRedflag: boolean,
-    timeCreated: string,
+    time: string,
     timePickedup: string,
     items: InvoiceItem[],
 }
 
-export type InvoiceStatus = 'issued' | 'paid' | 'pickedup' | 'shipped' | 'expired' | 'returned'
+export type InvoiceStatus = 'issued' | 'paid' | 'pickedup' | 'shipped' | 'expired' | 'returned' | ''
 export type PaymentMethod = 'card' | 'cash' | 'etransfer' | 'storeCredit' | ''
 
 export type InvoiceItem = {
