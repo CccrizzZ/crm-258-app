@@ -1,5 +1,5 @@
 import { useAtom } from 'jotai'
-import React, { useEffect } from 'react'
+import React from 'react'
 import { selectedEditInvoice } from '../utils/atoms'
 import {
   Button,
@@ -13,11 +13,11 @@ import {
   RiAuctionFill
 } from 'react-icons/ri'
 
-type TimeLineItem = {
-  title: string,
-  date: string,
-  bullet: React.ReactNode,
-}
+// type TimeLineItem = {
+//   title: string,
+//   date: string,
+//   bullet: React.ReactNode,
+// }
 
 type EditInvoiceModalProps = {
   open: boolean,
@@ -42,7 +42,7 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = (props: EditInvoiceMod
           05/20/2024
         </Text>
       </Timeline.Item>
-      <Timeline.Item bullet={<Ri4kFill size={12} />} title="Commits">
+      <Timeline.Item bullet={<Ri4kFill size={12} />} title="Invoice Paid">
         <Text c="dimmed" size="sm">
 
         </Text>
@@ -50,12 +50,12 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = (props: EditInvoiceMod
           05/20/2024
         </Text>
       </Timeline.Item>
-      <Timeline.Item title="Pull request" bullet={<Ri4kFill size={12} />} lineVariant="dashed">
+      <Timeline.Item title="Pickedup / Shipped" bullet={<Ri4kFill size={12} />} lineVariant="dashed">
         <Text c="dimmed" size="sm">
 
         </Text>
       </Timeline.Item>
-      <Timeline.Item title="Code review" bullet={<Ri4kFill size={12} />}>
+      <Timeline.Item title="Completed" bullet={<Ri4kFill size={12} />}>
         <Text c="dimmed" size="sm">
 
         </Text>

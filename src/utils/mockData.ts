@@ -17,7 +17,8 @@ export const generateInvoice = (): Invoice => ({
   paymentMethod: payments[Math.floor(Math.random() * payments.length)] as PaymentMethod,
   isShipping: faker.datatype.boolean(),
   isRedflag: false,
-  items: generateInvoiceItem()
+  items: generateInvoiceItem(),
+  timePickedup: faker.date.anytime().toLocaleString("en-US")
 })
 
 export const generateInvoiceItem = (): InvoiceItem[] => {

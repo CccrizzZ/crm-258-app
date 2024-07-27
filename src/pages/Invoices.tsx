@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Card,
+  FileInput,
   Grid,
   Menu,
   MultiSelect,
@@ -41,12 +42,12 @@ import { format } from 'date-fns'
 import EditInvoiceModal from '../components/EditInvoiceModal.tsx'
 
 const data = [
-  { month: 'January', Cash: 1200, Card: 900, Etransfer: 200 },
-  { month: 'February', Cash: 1900, Card: 1200, Etransfer: 400 },
-  { month: 'March', Cash: 400, Card: 1000, Etransfer: 200 },
-  { month: 'April', Cash: 1000, Card: 200, Etransfer: 800 },
-  { month: 'May', Cash: 800, Card: 1400, Etransfer: 1200 },
-  { month: 'June', Cash: 750, Card: 600, Etransfer: 1000 },
+  { month: 'January', Cash: 1200, Card: 900, "E-transfer": 200 },
+  { month: 'February', Cash: 1900, Card: 1200, "E-transfer": 400 },
+  { month: 'March', Cash: 400, Card: 1000, "E-transfer": 200 },
+  { month: 'April', Cash: 1000, Card: 200, "E-transfer": 800 },
+  { month: 'May', Cash: 800, Card: 1400, "E-transfer": 1200 },
+  { month: 'June', Cash: 750, Card: 600, "E-transfer": 1000 },
 ]
 
 export const data2 = [
@@ -94,19 +95,21 @@ const Invoices = () => {
   const [showEditInvoiceModal, setShowEditInvoiceModal] = useState<boolean>(false)
   const [__, setSelectedInvoice] = useAtom(selectedEditInvoice)
 
+  // pdf
+  const [selectedPDF, setSelectedPDF] = useState<File | null>(null)
 
   useEffect(() => {
     getInvoiceByPage(true)
   }, [])
 
-  const getInvoiceByPage = async (isInit: boolean, newPage?: number, filter?: InvoiceFilter, order?: number) => {
+  const getInvoiceByPage = async (isInit: boolean, newPage?: number, filter?: InvoiceFilter, order?: number, newItemsPerPage?: string | null) => {
     setIsLoading(true)
     await axios({
       method: 'post',
       url: `${server}/getInvoicesByPage`,
       data: {
         currPage: isInit ? 0 : newPage ?? currPage,
-        itemsPerPage: Number(itemsPerPage),
+        itemsPerPage: newItemsPerPage ? Number(newItemsPerPage) : Number(itemsPerPage),
         filter: filter ?? invoiceFilter,
         timeOrder: order ?? timeOrder
       }
@@ -310,6 +313,31 @@ const Invoices = () => {
     </Card>
   )
 
+  const addInvoiceFromPDF = async () => {
+    // null check on select
+    if (!selectedPDF) return
+    // create form data
+    const formData = new FormData()
+    formData.append('file', selectedPDF)
+
+    setIsLoading(true)
+    await axios({
+      method: 'post',
+      headers: { 'Content-Type': 'multipart/form-data' },
+      url: `${server}/createInvoiceFromPdf`,
+      data: formData,
+    }).then((res: AxiosResponse) => {
+      if (res.status === 200) {
+        alert(res.data['size'])
+        console.log(res.data['data'])
+      }
+    }).catch((err: AxiosError) => {
+      alert(err.response?.data)
+      setIsLoading(false)
+    })
+    setIsLoading(false)
+  }
+
   const renderFilterSection = () => (
     <Grid className='m-6'>
       <Grid.Col span={4}>
@@ -340,6 +368,22 @@ const Invoices = () => {
           >
             Refresh
           </Button>
+        </Card>
+        <Card className="mt-3 bg-[#222] gap-3">
+          <FileInput
+            value={selectedPDF}
+            onChange={setSelectedPDF}
+            placeholder="Add Invoice From PDF"
+            clearable
+          />
+          <div className='flex gap-3 justify-between'>
+            <Button>
+              Add Invoice Manually
+            </Button>
+            <Button color='teal' onClick={addInvoiceFromPDF}>
+              Add Invoice From PDF
+            </Button>
+          </div>
         </Card>
       </Grid.Col>
       <Grid.Col span={4}>
@@ -398,7 +442,7 @@ const Invoices = () => {
             series={[
               { name: 'Cash', color: 'teal.6' },
               { name: 'Card', color: 'blue.6' },
-              { name: 'Etransfer', color: 'violet.6' },
+              { name: 'E-transfer', color: 'violet.6' },
             ]}
           />
         </Card>
@@ -429,8 +473,9 @@ const Invoices = () => {
         open={showEditInvoiceModal}
         close={() => setShowEditInvoiceModal(false)}
       />
-      {/* <h1>Invoices Manager</h1> */}
+      {/* charts */}
       {renderCharts()}
+      {/* table */}
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         {renderFilterSection()}
         <Pagination
@@ -463,9 +508,10 @@ const Invoices = () => {
           totalCount={totalCount}
           itemsPerPage={itemsPerPage}
           setItemsPerPage={(val: string | null) => {
+            console.log(val)
             setItemsPerPage(val)
             setCurrPage(0)
-            getInvoiceByPage(true)
+            getInvoiceByPage(true, undefined, undefined, undefined, val)
           }}
           isBottom={true}
           currPage={currPage}
