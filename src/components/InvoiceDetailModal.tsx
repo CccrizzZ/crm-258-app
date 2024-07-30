@@ -6,11 +6,14 @@ import {
   Grid,
   Modal,
   Timeline,
-  Text
+  Text,
+  Fieldset,
+  TextInput
 } from '@mantine/core'
 import {
   Ri4kFill,
-  RiAuctionFill
+  RiAuctionFill,
+  RiFilePdf2Fill
 } from 'react-icons/ri'
 
 // type TimeLineItem = {
@@ -19,12 +22,12 @@ import {
 //   bullet: React.ReactNode,
 // }
 
-type EditInvoiceModalProps = {
+type InvoiceDetailModalProps = {
   open: boolean,
   close: () => void
 }
 
-const EditInvoiceModal: React.FC<EditInvoiceModalProps> = (props: EditInvoiceModalProps) => {
+const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = (props: InvoiceDetailModalProps) => {
   const [invoice] = useAtom(selectedEditInvoice)
 
   const renderTimeLine = () => (
@@ -63,18 +66,28 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = (props: EditInvoiceMod
     </Timeline>
   )
 
+  const renderInvoiceDetail = () => (
+    <div>
+      <Fieldset legend="Customer information">
+        <TextInput label="Name" value={invoice.buyerName} />
+        <TextInput label="Email" value={invoice.buyerEmail} />
+        <TextInput label="Address" value={invoice.buyerAddress} />
+      </Fieldset>
+    </div>
+  )
+
   return (
     <Modal
       opened={props.open}
       onClose={props.close}
       size="xl"
-      title={`Edit Invoice ${invoice.invoiceNumber}`}
+      title={<h2>Edit Invoice {invoice.invoiceNumber}</h2>}
       closeOnClickOutside={false}
       centered
     >
       <Grid>
         <Grid.Col span={6}>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Aut reprehenderit doloremque sunt numquam quia cum mollitia nobis totam eos minus. Commodi voluptate doloremque sequi repellat necessitatibus, sunt blanditiis rerum dicta?
+          {renderInvoiceDetail()}
         </Grid.Col>
         <Grid.Col span={6}>
           {renderTimeLine()}
@@ -82,10 +95,11 @@ const EditInvoiceModal: React.FC<EditInvoiceModalProps> = (props: EditInvoiceMod
       </Grid>
       <div className='flex justify-between w-full p-3 mt-3'>
         <Button color='gray' onClick={props.close}>Close</Button>
-        <Button color="teal">Confirm Changes</Button>
+        <Button color='red'><RiFilePdf2Fill /> Download PDF</Button>
+        <Button color='teal'>Confirm Changes</Button>
       </div>
     </Modal>
   )
 }
 
-export default EditInvoiceModal
+export default InvoiceDetailModal

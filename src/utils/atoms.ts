@@ -13,7 +13,9 @@ export const initInvoiceFilter: InvoiceFilter = {
     paymentMethod: [],
     status: [],
     shipping: '',
-    dateRange: [null, null],
+    // dateRange: [null, null],
+    fromDate: null,
+    toDate: null,
     invoiceTotalRange: { min: 0, max: 999999 },
     keyword: ''
 }
@@ -23,6 +25,7 @@ export const initInvoice = {
     invoiceNumber: 0,
     buyerName: '',
     buyerEmail: '',
+    buyerAddress: '',
     paymentMethod: '' as PaymentMethod,
     auctionLot: 0,
     invoiceTotal: 0,

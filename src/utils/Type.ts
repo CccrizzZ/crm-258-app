@@ -2,6 +2,7 @@ export type Invoice = {
     invoiceNumber: number,
     buyerName: string,
     buyerEmail: string,
+    buyerAddress: string,
     paymentMethod: PaymentMethod,
     auctionLot: number,
     invoiceTotal: number,
@@ -41,7 +42,9 @@ export type InvoiceFilter = {
     paymentMethod: string[],
     status: string[],
     shipping: string,
-    dateRange: [Date | null, Date | null],
+    // dateRange: [Date | null, Date | null],
+    fromDate: Date | null,
+    toDate: Date | null,
     invoiceTotalRange: { min: number, max: number }
     keyword: string,
 }

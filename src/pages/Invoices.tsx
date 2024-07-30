@@ -3,6 +3,7 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
   FileInput,
   Grid,
   Menu,
@@ -14,6 +15,7 @@ import {
   Title
 } from '@mantine/core'
 import {
+  initInvoice,
   initInvoiceFilter,
   invoiceArrAtom,
   invoiceFilterAtom,
@@ -24,6 +26,9 @@ import { useAtom } from 'jotai'
 import {
   RiArrowDownFill,
   RiArrowUpFill,
+  RiCalendar2Fill,
+  RiCalendar2Line,
+  RiCloudFill,
   RiDeleteBin2Fill,
   RiMailFill,
   RiMailSendLine,
@@ -39,7 +44,7 @@ import { getPaymentIcon, getStatusColor, server } from '../utils/utils.tsx'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import { Invoice, InvoiceFilter } from '../utils/Type.ts'
 import { format } from 'date-fns'
-import EditInvoiceModal from '../components/EditInvoiceModal.tsx'
+import InvoiceDetailModal from '../components/InvoiceDetailModal.tsx'
 
 const data = [
   { month: 'January', Cash: 1200, Card: 900, "E-transfer": 200 },
@@ -92,17 +97,24 @@ const Invoices = () => {
   const [timeOrder, setTimeOrder] = useState<number>(-1)
 
   // invoice actions
-  const [showEditInvoiceModal, setShowEditInvoiceModal] = useState<boolean>(false)
+  const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState<boolean>(false)
   const [__, setSelectedInvoice] = useAtom(selectedEditInvoice)
 
   // pdf
   const [selectedPDF, setSelectedPDF] = useState<File | null>(null)
+  const [uploadPDF, setUploadPDF] = useState<boolean>(false)
 
   useEffect(() => {
     getInvoiceByPage(true)
   }, [])
 
-  const getInvoiceByPage = async (isInit: boolean, newPage?: number, filter?: InvoiceFilter, order?: number, newItemsPerPage?: string | null) => {
+  const getInvoiceByPage = async (
+    isInit: boolean,
+    newPage?: number,
+    filter?: InvoiceFilter,
+    order?: number,
+    newItemsPerPage?: string | null
+  ) => {
     setIsLoading(true)
     await axios({
       method: 'post',
@@ -132,7 +144,7 @@ const Invoices = () => {
 
   const showEditPopup = (val: Invoice) => {
     setSelectedInvoice(val)
-    setShowEditInvoiceModal(true)
+    setShowInvoiceDetailModal(true)
   }
 
   const renderInvoicesTable = () => (
@@ -156,7 +168,7 @@ const Invoices = () => {
         </Table.Tr>
       </Table.Thead>
       <Table.Tbody>
-        {invoices.length > 0 ? invoices.map((val, index) => (
+        {invoices ? invoices.map((val, index) => (
           <Table.Tr key={index}>
             <Table.Td>{val.invoiceNumber}</Table.Td>
             <Table.Td>
@@ -267,14 +279,37 @@ const Invoices = () => {
   )
 
   const renderDateSelect = () => (
-    <DatePickerInput
-      clearable
-      type="range"
-      label="Pick dates range"
-      placeholder="Pick dates range"
-      value={invoiceFilter.dateRange}
-      onChange={(value) => setInvoiceFilter({ ...invoiceFilter, dateRange: value })}
-    />
+    <div>
+      {/* <DatePickerInput
+        leftSection={<RiCalendar2Fill />}
+        clearable
+        type="range"
+        label="Pick dates range"
+        placeholder="Pick dates range"
+        value={invoiceFilter.dateRange}
+        onChange={(value) => setInvoiceFilter({ ...invoiceFilter, dateRange: value })}
+      /> */}
+      <DatePickerInput
+        leftSection={<RiCalendar2Fill />}
+        clearable
+        label="From Date / Single Day"
+        value={invoiceFilter.fromDate}
+        onChange={(value) => setInvoiceFilter({
+          ...invoiceFilter,
+          fromDate: value
+        })}
+      />
+      <DatePickerInput
+        leftSection={<RiCalendar2Line />}
+        clearable
+        label="End Date"
+        value={invoiceFilter.toDate}
+        onChange={(value) => setInvoiceFilter({
+          ...invoiceFilter,
+          toDate: value
+        })}
+      />
+    </div>
   )
 
   const renderPriceRangeSelect = () => (
@@ -316,9 +351,11 @@ const Invoices = () => {
   const addInvoiceFromPDF = async () => {
     // null check on select
     if (!selectedPDF) return
+
     // create form data
     const formData = new FormData()
     formData.append('file', selectedPDF)
+    formData.append('uploadPDF', String(uploadPDF))
 
     setIsLoading(true)
     await axios({
@@ -377,12 +414,16 @@ const Invoices = () => {
             clearable
           />
           <div className='flex gap-3 justify-between'>
-            <Button>
+            <Button color='gray'>
               Add Invoice Manually
             </Button>
             <Button color='teal' onClick={addInvoiceFromPDF}>
               Add Invoice From PDF
             </Button>
+          </div>
+          <div className='flex justify-between'>
+            <span className='flex'><RiCloudFill className='m-0 mx-2 p-0 h-full' />Upload PDF File to Cloud</span>
+            <Checkbox value={Number(uploadPDF)} onChange={(val) => setUploadPDF(val.currentTarget.checked)} />
           </div>
         </Card>
       </Grid.Col>
@@ -467,11 +508,18 @@ const Invoices = () => {
     </Grid>
   )
 
+  const onItemsPerPageChange = (newPage: string | null) => {
+    setItemsPerPage(newPage)
+    setCurrPage(0)
+    getInvoiceByPage(true)
+    getInvoiceByPage(true, undefined, undefined, undefined, newPage)
+  }
+
   return (
     <div>
-      <EditInvoiceModal
-        open={showEditInvoiceModal}
-        close={() => setShowEditInvoiceModal(false)}
+      <InvoiceDetailModal
+        open={showInvoiceDetailModal}
+        close={() => setShowInvoiceDetailModal(false)}
       />
       {/* charts */}
       {renderCharts()}
@@ -481,11 +529,7 @@ const Invoices = () => {
         <Pagination
           totalCount={totalCount}
           itemsPerPage={itemsPerPage}
-          setItemsPerPage={(val: string | null) => {
-            setItemsPerPage(val)
-            setCurrPage(0)
-            getInvoiceByPage(true)
-          }}
+          setItemsPerPage={onItemsPerPageChange}
           isBottom={false}
           currPage={currPage}
           nextPage={nextPage}
@@ -497,7 +541,7 @@ const Invoices = () => {
         <hr className='border-[#555] mt-6' />
         {renderInvoicesTable()}
         {
-          invoices.length < 1 ?
+          invoices && invoices.length < 1 ?
             <div className='flex w-full content-center min-w-full p-24'>
               <h2 className='m-auto'>No Invoices</h2>
             </div>
@@ -507,12 +551,7 @@ const Invoices = () => {
         <Pagination
           totalCount={totalCount}
           itemsPerPage={itemsPerPage}
-          setItemsPerPage={(val: string | null) => {
-            console.log(val)
-            setItemsPerPage(val)
-            setCurrPage(0)
-            getInvoiceByPage(true, undefined, undefined, undefined, val)
-          }}
+          setItemsPerPage={onItemsPerPageChange}
           isBottom={true}
           currPage={currPage}
           nextPage={nextPage}
