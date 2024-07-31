@@ -16,7 +16,7 @@ export type Invoice = {
     items: InvoiceItem[],
 }
 
-export type InvoiceStatus = 'issued' | 'paid' | 'pickedup' | 'shipped' | 'expired' | 'returned' | ''
+export type InvoiceStatus = 'unpaid' | 'paid' | 'pickedup' | 'shipped' | 'expired' | 'returned' | ''
 export type PaymentMethod = 'card' | 'cash' | 'etransfer' | 'storeCredit' | ''
 
 export type InvoiceItem = {
@@ -39,6 +39,7 @@ export type Buyer = {
 }
 
 export type InvoiceFilter = {
+    invoiceNumber: number,
     paymentMethod: string[],
     status: string[],
     shipping: string,
@@ -47,4 +48,11 @@ export type InvoiceFilter = {
     toDate: Date | null,
     invoiceTotalRange: { min: number, max: number }
     keyword: string,
+}
+
+export type InvoiceEvent = {
+    title: string,
+    desc: string,
+    time: string,
+    type: 'communication' | 'pickup' | 'expire'
 }

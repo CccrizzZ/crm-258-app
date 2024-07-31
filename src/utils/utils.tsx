@@ -45,7 +45,7 @@ export const getPaymentIcon = (method: string) => {
 }
 
 export const getStatusColor = (stat: string): string => {
-  if (stat === 'issued') {
+  if (stat === 'unpaid') {
     return 'orange'
   } else if (stat === 'paid') {
     return 'blue'

@@ -2,13 +2,14 @@ import { faker } from '@faker-js/faker'
 import { Invoice, InvoiceItem, PaymentMethod, InvoiceStatus } from './Type'
 
 const payments = ['card', 'cash', 'etransfer', 'storeCredit']
-const status = ['issued', 'paid', 'pickedup', 'shipped', 'expired', 'returned']
+const status = ['unpaid', 'paid', 'pickedup', 'shipped', 'expired', 'returned']
 
 export const generateInvoice = (): Invoice => ({
   invoiceNumber: faker.number.int({ min: 10000, max: 99999 }),
   time: faker.date.anytime().toLocaleString("en-US"),
   buyerName: faker.person.fullName(),
   buyerEmail: faker.internet.email(),
+  buyerAddress: faker.location.streetAddress(),
   auctionLot: faker.number.int({ min: 100, max: 1000 }),
   invoiceTotal: Number(faker.number.float({ min: 6, max: 600 }).toFixed(2)),
   buyersPremium: faker.number.int({ min: 1, max: 30 }),

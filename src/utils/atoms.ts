@@ -10,6 +10,7 @@ export const invoiceArrAtom = atom<Invoice[]>([])
 
 // filters for invoices data
 export const initInvoiceFilter: InvoiceFilter = {
+    invoiceNumber: 0,
     paymentMethod: [],
     status: [],
     shipping: '',

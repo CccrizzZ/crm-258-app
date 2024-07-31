@@ -15,7 +15,6 @@ import {
   Title
 } from '@mantine/core'
 import {
-  initInvoice,
   initInvoiceFilter,
   invoiceArrAtom,
   invoiceFilterAtom,
@@ -34,13 +33,13 @@ import {
   RiMailSendLine,
   RiMenuFill,
   RiPenNibFill,
-  RiUserFill
+  RiUser3Fill,
 } from 'react-icons/ri'
 import { AreaChart, BarChart } from '@mantine/charts'
 import { DatePickerInput } from '@mantine/dates';
 import { useEffect, useState } from 'react'
 import Pagination from '../components/Pagination.tsx'
-import { getPaymentIcon, getStatusColor, server } from '../utils/utils.tsx'
+import { getPaymentIcon, getStatusColor, server, stringToNumber } from '../utils/utils.tsx'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import { Invoice, InvoiceFilter } from '../utils/Type.ts'
 import { format } from 'date-fns'
@@ -87,6 +86,7 @@ const Invoices = () => {
   const [_, setIsLoading] = useAtom(isLoadingAtom)
   const [invoices, setInvoices] = useAtom(invoiceArrAtom)
   const [invoiceFilter, setInvoiceFilter] = useAtom(invoiceFilterAtom)
+  const [filterChanged, setFilterChanged] = useState<boolean>(false)
 
   // pagination
   const [currPage, setCurrPage] = useState<number>(0)
@@ -115,6 +115,11 @@ const Invoices = () => {
     order?: number,
     newItemsPerPage?: string | null
   ) => {
+    // if there is invoice number passed into filter or it is initting
+    if (invoiceFilter.invoiceNumber !== 0 || isInit || filterChanged) {
+      newPage = 0
+      setCurrPage(0)
+    }
     setIsLoading(true)
     await axios({
       method: 'post',
@@ -134,6 +139,7 @@ const Invoices = () => {
       alert(err.message)
       setIsLoading(false)
     })
+    setFilterChanged(false)
     setIsLoading(false)
   }
 
@@ -155,7 +161,7 @@ const Invoices = () => {
           <Table.Th>Buyer Name</Table.Th>
           <Table.Th>Buyer Email</Table.Th>
           <Table.Th>Payment Method</Table.Th>
-          <Table.Th>Invoice Total</Table.Th>
+          <Table.Th>Invoice Total (CAD)</Table.Th>
           <Table.Th>Shipping</Table.Th>
           <Table.Th>Status</Table.Th>
           <Table.Th className='flex justify-center'>
@@ -173,11 +179,15 @@ const Invoices = () => {
             <Table.Td>{val.invoiceNumber}</Table.Td>
             <Table.Td>
               <div className='flex gap-2 leading-none'>
-                <RiUserFill />
+                <RiUser3Fill />
                 {val.buyerName}
               </div>
             </Table.Td>
-            <Table.Td>{val.buyerEmail}</Table.Td>
+            <Table.Td>
+              <span className='text-teal-500'>
+                {val.buyerEmail}
+              </span>
+            </Table.Td>
             <Table.Td>{getPaymentIcon(val.paymentMethod)}</Table.Td>
             <Table.Td>${val.invoiceTotal.toFixed(2)}</Table.Td>
             <Table.Td>
@@ -239,7 +249,10 @@ const Invoices = () => {
         { value: 'storeCredit', label: 'Store Credit' },
       ]}
       value={invoiceFilter.paymentMethod}
-      onChange={(value: string[]) => setInvoiceFilter({ ...invoiceFilter, paymentMethod: value })}
+      onChange={(value: string[]) => {
+        setInvoiceFilter({ ...invoiceFilter, paymentMethod: value })
+        setFilterChanged(true)
+      }}
     />
   )
 
@@ -251,14 +264,17 @@ const Invoices = () => {
       checkIconPosition="right"
       placeholder="Pick Invoice Status"
       data={[
-        { value: 'issued', label: 'Issued' },
+        { value: 'unpaid', label: 'Unpaid' },
         { value: 'paid', label: 'Paid' },
         { value: 'pickedup', label: 'Pickedup' },
         { value: 'shipped', label: 'Shipped' },
         { value: 'expired', label: 'Expired' },
       ]}
       value={invoiceFilter.status}
-      onChange={(value: string[]) => setInvoiceFilter({ ...invoiceFilter, status: value })}
+      onChange={(value: string[]) => {
+        setInvoiceFilter({ ...invoiceFilter, status: value })
+        setFilterChanged(true)
+      }}
     />
   )
 
@@ -274,40 +290,40 @@ const Invoices = () => {
         { value: 'shipping', label: 'Show Only Shipping' }
       ]}
       value={invoiceFilter.shipping}
-      onChange={(value: string | null) => setInvoiceFilter({ ...invoiceFilter, shipping: value ?? '' })}
+      onChange={(value: string | null) => {
+        setInvoiceFilter({ ...invoiceFilter, shipping: value ?? '' })
+        setFilterChanged(true)
+      }}
     />
   )
 
   const renderDateSelect = () => (
     <div>
-      {/* <DatePickerInput
-        leftSection={<RiCalendar2Fill />}
-        clearable
-        type="range"
-        label="Pick dates range"
-        placeholder="Pick dates range"
-        value={invoiceFilter.dateRange}
-        onChange={(value) => setInvoiceFilter({ ...invoiceFilter, dateRange: value })}
-      /> */}
       <DatePickerInput
         leftSection={<RiCalendar2Fill />}
         clearable
         label="From Date / Single Day"
         value={invoiceFilter.fromDate}
-        onChange={(value) => setInvoiceFilter({
-          ...invoiceFilter,
-          fromDate: value
-        })}
+        onChange={(value) => {
+          setInvoiceFilter({
+            ...invoiceFilter,
+            fromDate: value
+          })
+          setFilterChanged(true)
+        }}
       />
       <DatePickerInput
         leftSection={<RiCalendar2Line />}
         clearable
         label="End Date"
         value={invoiceFilter.toDate}
-        onChange={(value) => setInvoiceFilter({
-          ...invoiceFilter,
-          toDate: value
-        })}
+        onChange={(value) => {
+          setInvoiceFilter({
+            ...invoiceFilter,
+            toDate: value
+          })
+          setFilterChanged(true)
+        }}
       />
     </div>
   )
@@ -323,12 +339,13 @@ const Invoices = () => {
           defaultValue={0}
           min={0}
           value={invoiceFilter.invoiceTotalRange.min}
-          onChange={
-            (value) => setInvoiceFilter({
+          onChange={(value) => {
+            setInvoiceFilter({
               ...invoiceFilter,
               invoiceTotalRange: { ...invoiceFilter.invoiceTotalRange, min: Number(value) ?? 0 }
             })
-          }
+            setFilterChanged(true)
+          }}
         />
         <NumberInput
           label="Max"
@@ -337,12 +354,13 @@ const Invoices = () => {
           defaultValue={99999}
           min={1}
           value={invoiceFilter.invoiceTotalRange.max}
-          onChange={
-            (value) => setInvoiceFilter({
+          onChange={(value) => {
+            setInvoiceFilter({
               ...invoiceFilter,
               invoiceTotalRange: { ...invoiceFilter.invoiceTotalRange, max: Number(value) ?? 0 }
             })
-          }
+            setFilterChanged(true)
+          }}
         />
       </div>
     </Card>
@@ -365,7 +383,7 @@ const Invoices = () => {
       data: formData,
     }).then((res: AxiosResponse) => {
       if (res.status === 200) {
-        alert(res.data['size'])
+        alert(res.data['data']['invoiceNumber'])
         console.log(res.data['data'])
       }
     }).catch((err: AxiosError) => {
@@ -380,10 +398,30 @@ const Invoices = () => {
       <Grid.Col span={4}>
         <Card className='bg-[#222]'>
           <Textarea
+            value={invoiceFilter.invoiceNumber}
+            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+              setInvoiceFilter({
+                ...invoiceFilter,
+                invoiceNumber: stringToNumber(event.target.value)
+              })
+              setFilterChanged(true)
+            }}
+            label="Search Invoice Number"
+            description="Input Invoice Number"
+            placeholder="Search Invoice Number"
+          />
+          <br />
+          <Textarea
             value={invoiceFilter.keyword}
-            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setInvoiceFilter({ ...invoiceFilter, keyword: event.target.value })}
-            label="Search Invoice"
-            description="Input invoice number or keywords"
+            onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => {
+              setInvoiceFilter({
+                ...invoiceFilter,
+                keyword: event.target.value
+              })
+              setFilterChanged(true)
+            }}
+            label="Search Keyword"
+            description="Input keywords separated by space"
             placeholder="Search Keywords"
           />
         </Card>
@@ -401,7 +439,7 @@ const Invoices = () => {
           <Button
             onClick={() => getInvoiceByPage(false)}
             variant="gradient"
-            gradient={{ from: 'cyan', to: 'teal', deg: 0 }}
+            gradient={filterChanged ? { from: 'orange', to: 'red', deg: 45 } : { from: 'cyan', to: 'teal', deg: 0 }}
           >
             Refresh
           </Button>
