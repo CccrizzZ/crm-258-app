@@ -1,6 +1,4 @@
-import { useAtom } from 'jotai'
-import React, { useState } from 'react'
-import { selectedEditInvoice } from '../utils/atoms'
+import React, { useEffect, useState } from 'react'
 import {
   Button,
   Grid,
@@ -13,23 +11,29 @@ import {
   Select
 } from '@mantine/core'
 import {
-  Ri4kFill,
   RiAddFill,
-  RiAuctionFill,
-  RiFilePdf2Fill
+  RiFilePdf2Fill,
+  RiFileTextLine
 } from 'react-icons/ri'
 import { Invoice } from '../utils/Type'
+import { isObjectsEqual, stringToNumber } from '../utils/utils'
 
 type InvoiceDetailModalProps = {
+  selected: Invoice,
   open: boolean,
-  close: () => void
+  close: () => void,
 }
 
 const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = (props: InvoiceDetailModalProps) => {
-  const [invoice] = useAtom(selectedEditInvoice)
-  const [newInvoice, setNewInvoice] = useState<Invoice>(invoice)
+  const [newInvoice, setNewInvoice] = useState<Invoice>({} as Invoice)
 
-  // time line should render each invoice document event array
+  useEffect(() => {
+    if (props.open) {
+      setNewInvoice(props.selected)
+    }
+  }, [props.open])
+
+  // will render according to 
   const renderTimeLine = () => (
     <Timeline
       active={1}
@@ -37,74 +41,91 @@ const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = (props: InvoiceDet
       lineWidth={2}
       color='teal'
     >
-      <Timeline.Item
-        bullet={<RiAuctionFill size={12} />}
-        title="Bid Completed"
-      >
-        <Text c="dimmed" size="sm">
-          Customer Have Won the Bid
-        </Text>
-        <Text size="xs" mt={4}>
-          05/20/2024
-        </Text>
-      </Timeline.Item>
-      <Timeline.Item
-        bullet={<Ri4kFill size={12} />}
-        title="Invoice Paid"
-      >
-        <Text c="dimmed" size="sm">
-
-        </Text>
-        <Text size="xs" mt={4}>
-          05/20/2024
-        </Text>
-      </Timeline.Item>
-      <Timeline.Item
-        title="Pickedup / Shipped"
-        bullet={<Ri4kFill size={12} />}
-        lineVariant="dotted"
-      >
-        <Text c="dimmed" size="sm">
-
-        </Text>
-      </Timeline.Item>
-      <Timeline.Item
-        title="Completed"
-        bullet={<Ri4kFill size={12} />}
-      >
-        <Text c="dimmed" size="sm">
-
-        </Text>
-      </Timeline.Item>
+      {newInvoice.invoiceEvent !== undefined ? newInvoice.invoiceEvent.map((val, index) => (
+        <Timeline.Item
+          key={index + val.time}
+          bullet={<RiFileTextLine />}
+          title={val.title}
+        >
+          <Text c="dimmed" size="sm">
+            {val.desc}
+          </Text>
+          <Text size="xs" mt={4}>
+            {val.time}
+          </Text>
+        </Timeline.Item>
+      )) : <></>}
     </Timeline>
   )
 
   const renderInvoiceDetail = () => (
-    <div>
-      <Fieldset legend="Customer information">
-        <TextInput label="Name" value={newInvoice.buyerName} />
-        <TextInput label="Email" value={newInvoice.buyerEmail} />
+    <div className='gap-6 grid'>
+      <Fieldset legend="🧍‍♂️ Customer information" className='gap-3 grid'>
+        <TextInput
+          label="Name"
+          value={newInvoice.buyerName}
+          onChange={(e) => {
+            setNewInvoice({ ...newInvoice, buyerName: e.target.value })
+          }}
+        />
+        <TextInput
+          label="Email"
+          value={newInvoice.buyerEmail}
+          onChange={(e) => {
+            setNewInvoice({ ...newInvoice, buyerEmail: e.target.value })
+          }}
+        />
         <Textarea
           label="Address"
           value={newInvoice.buyerAddress}
+          onChange={(e) => {
+            setNewInvoice({ ...newInvoice, buyerAddress: e.target.value })
+          }}
         />
       </Fieldset>
-
-      <Fieldset legend="Invoice Status">
-        <TextInput label="Email" value={newInvoice.auctionLot} />
-        {/* <TextInput label="Shipping" value={newInvoice.isShipping} /> */}
+      <Fieldset legend="📜 Invoice Status" className='gap-3 grid'>
+        <TextInput
+          type='number'
+          label="Auction Lot"
+          value={newInvoice.auctionLot}
+          onChange={(e) => {
+            setNewInvoice({ ...newInvoice, auctionLot: stringToNumber(e.target.value) })
+          }}
+        />
         <Select
-          label="Shipping"
-          placeholder="Shipping"
+          label="Is Shipping"
           data={['Shipping', 'Pickup']}
           value={newInvoice.isShipping ? 'Shipping' : 'Pickup'}
           onChange={(val: string | null) => {
-            val === 'Shipping' ? setNewInvoice({ ...newInvoice, isShipping: true }) : setNewInvoice({ ...newInvoice, isShipping: false })
+            val === 'Shipping' ? setNewInvoice({ ...newInvoice, isShipping: true }) : val === 'Pickup' ? setNewInvoice({ ...newInvoice, isShipping: false }) : <></>
+          }}
+        />
+        <Select
+          label="Payment Method"
+          data={['Card', 'Cash', 'Etransfer', 'Store Credit', '']}
+          value={newInvoice.paymentMethod}
+          onChange={(val: string | null) => {
+            switch (val) {
+              case 'card':
+                return 'Card'
+              case 'cash':
+                return 'Cash'
+              case 'etransfer':
+                return "Etransfer"
+              case 'storeCredit':
+                return "Store Credit"
+              default:
+                return
+            }
           }}
         />
       </Fieldset>
     </div>
   )
+
+  const renderItemTable = () => {
+
+  }
 
   return (
     <Modal
@@ -113,7 +134,7 @@ const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = (props: InvoiceDet
       size="xl"
       title={
         <div className='flex justify-between w-full'>
-          <h1>Edit Invoice {invoice.invoiceNumber}</h1>
+          <h1>Edit Invoice {newInvoice.invoiceNumber}</h1>
         </div>
       }
       closeOnClickOutside={false}
@@ -133,7 +154,7 @@ const InvoiceDetailModal: React.FC<InvoiceDetailModalProps> = (props: InvoiceDet
       </Grid>
       <div className='flex justify-between w-full p-3 mt-3'>
         <Button color='gray' onClick={props.close}>Close</Button>
-        <Button color='teal'>Update</Button>
+        <Button color={isObjectsEqual(props.selected, newInvoice) ? 'teal' : "orange"}>Update</Button>
       </div>
     </Modal>
   )

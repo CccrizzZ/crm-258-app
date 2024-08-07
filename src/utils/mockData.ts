@@ -19,7 +19,8 @@ export const generateInvoice = (): Invoice => ({
   isShipping: faker.datatype.boolean(),
   isRedflag: false,
   items: generateInvoiceItem(),
-  timePickedup: faker.date.anytime().toLocaleString("en-US")
+  timePickedup: faker.date.anytime().toLocaleString("en-US"),
+  invoiceEvent: []
 })
 
 export const generateInvoiceItem = (): InvoiceItem[] => {

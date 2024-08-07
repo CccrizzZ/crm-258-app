@@ -21,7 +21,7 @@ import {
   isLoadingAtom,
   selectedEditInvoice
 } from '../utils/atoms'
-import { useAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import {
   RiArrowDownFill,
   RiArrowUpFill,
@@ -83,10 +83,12 @@ export const data2 = [
 ]
 
 const Invoices = () => {
-  const [_, setIsLoading] = useAtom(isLoadingAtom)
+  const setIsLoading = useSetAtom(isLoadingAtom)
+  // invoices
   const [invoices, setInvoices] = useAtom(invoiceArrAtom)
   const [invoiceFilter, setInvoiceFilter] = useAtom(invoiceFilterAtom)
   const [filterChanged, setFilterChanged] = useState<boolean>(false)
+  // const [selectedInvoice, setSelectedInvoice] = useState<Invoice>({} as Invoice)
 
   // pagination
   const [currPage, setCurrPage] = useState<number>(0)
@@ -98,7 +100,7 @@ const Invoices = () => {
 
   // invoice actions
   const [showInvoiceDetailModal, setShowInvoiceDetailModal] = useState<boolean>(false)
-  const [__, setSelectedInvoice] = useAtom(selectedEditInvoice)
+  const [selectedInvoice, setSelectedInvoice] = useAtom(selectedEditInvoice)
 
   // pdf
   const [selectedPDF, setSelectedPDF] = useState<File | null>(null)
@@ -210,7 +212,7 @@ const Invoices = () => {
             <Table.Td>
               <Menu shadow="md" width={200}>
                 <Menu.Target>
-                  <ActionIcon color='rgba(77, 77, 77, 1)'>
+                  <ActionIcon color='rgba(77, 77, 77, 1)' onClick={() => setSelectedInvoice(val)}>
                     <RiMenuFill />
                   </ActionIcon>
                 </Menu.Target>
@@ -504,7 +506,7 @@ const Invoices = () => {
     getInvoiceByPage(true)
   }
 
-
+  // top charts
   const renderCharts = () => (
     <Grid className='m-6 gap-2'>
       <Grid.Col span={6}>
@@ -556,6 +558,7 @@ const Invoices = () => {
   return (
     <div>
       <InvoiceDetailModal
+        selected={selectedInvoice}
         open={showInvoiceDetailModal}
         close={() => setShowInvoiceDetailModal(false)}
       />

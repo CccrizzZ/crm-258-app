@@ -14,6 +14,7 @@ export type Invoice = {
     time: string,
     timePickedup: string,
     items: InvoiceItem[],
+    invoiceEvent: InvoiceEvent[]
 }
 
 export type InvoiceStatus = 'unpaid' | 'paid' | 'pickedup' | 'shipped' | 'expired' | 'returned' | ''
@@ -54,5 +55,4 @@ export type InvoiceEvent = {
     title: string,
     desc: string,
     time: string,
-    type: 'communication' | 'pickup' | 'expire'
 }
